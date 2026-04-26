@@ -17,12 +17,12 @@ class CheckoutController extends Controller
 {
     public function __construct()
     {
-        // Konfigurasi Midtrans
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        Config::$clientKey = env('MIDTRANS_CLIENT_KEY');
-        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
+        // ✅ Pakai config() bukan env()
+        Config::$serverKey    = config('midtrans.server_key');
+        Config::$clientKey    = config('midtrans.client_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized  = true;
+        Config::$is3ds        = true;
     }
 
     public function index()
@@ -33,9 +33,7 @@ class CheckoutController extends Controller
             return redirect()->route('shop.index')->with('error', 'Keranjang kosong!');
         }
 
-        $total = $carts->sum(function ($cart) {
-            return $cart->product->price * $cart->quantity;
-        });
+        $total = $carts->sum(fn($cart) => $cart->product->price * $cart->quantity);
 
         return view('customer.checkout.index', compact('carts', 'total'));
     }
@@ -55,9 +53,7 @@ class CheckoutController extends Controller
             ], 400);
         }
 
-        $total = $carts->sum(function ($cart) {
-            return $cart->product->price * $cart->quantity;
-        });
+        $total = $carts->sum(fn($cart) => $cart->product->price * $cart->quantity);
 
         DB::beginTransaction();
 
@@ -66,72 +62,71 @@ class CheckoutController extends Controller
 
             // Simpan transaksi
             $transaction = Transaction::create([
-                'user_id' => Auth::id(),
-                'order_id' => $orderId,
-                'total_amount' => $total,
-                'status' => 'pending',
+                'user_id'          => Auth::id(),
+                'order_id'         => $orderId,
+                'total_amount'     => $total,
+                'status'           => 'pending',
                 'shipping_address' => $request->shipping_address,
             ]);
 
-            // Simpan item transaksi
+            // Simpan item & siapkan item_details sekaligus
+            $itemDetails = [];
             foreach ($carts as $cart) {
                 TransactionItem::create([
                     'transaction_id' => $transaction->id,
-                    'product_id' => $cart->product_id,
-                    'product_name' => $cart->product->name,
-                    'price' => $cart->product->price,
-                    'quantity' => $cart->quantity,
+                    'product_id'     => $cart->product_id,
+                    'product_name'   => $cart->product->name,
+                    'price'          => $cart->product->price,
+                    'quantity'       => $cart->quantity,
                 ]);
 
-                // Kurangi stok
-                $cart->product->decrement('stock', $cart->quantity);
-            }
-
-            // Kosongkan keranjang
-            Cart::where('user_id', Auth::id())->delete();
-
-            // Siapkan payload untuk Midtrans
-            $itemDetails = [];
-            foreach ($transaction->items as $item) {
                 $itemDetails[] = [
-                    'id' => $item->product_id,
-                    'price' => (int) $item->price,
-                    'quantity' => $item->quantity,
-                    'name' => substr($item->product_name, 0, 50),
+                    'id'       => $cart->product_id,
+                    'price'    => (int) $cart->product->price,
+                    'quantity' => $cart->quantity,
+                    'name'     => substr($cart->product->name, 0, 50),
                 ];
             }
 
-            $customerDetails = [
-                'first_name' => Auth::user()->name,
-                'email' => Auth::user()->email,
-                'shipping_address' => [
-                    'address' => $request->shipping_address,
-                ],
-            ];
-
+            // ✅ Siapkan params Midtrans dengan notification_url
             $params = [
                 'transaction_details' => [
-                    'order_id' => $orderId,
+                    'order_id'     => $orderId,
                     'gross_amount' => (int) $total,
                 ],
-                'customer_details' => $customerDetails,
+                'customer_details' => [
+                    'first_name' => Auth::user()->name,
+                    'email'      => Auth::user()->email,
+                ],
                 'item_details' => $itemDetails,
+
+                // ✅ INI YANG PALING PENTING — hardcode URL ngrok kamu di sini
+                // Ganti dengan URL ngrok terbaru setiap kali restart ngrok
+                'callbacks' => [
+                    'notification' => env('MIDTRANS_NOTIFICATION_URL', url('/api/midtrans/callback')),
+                ],
             ];
 
-            // Dapatkan Snap Token dari Midtrans
+            // Dapatkan Snap Token
             $snapToken = Snap::getSnapToken($params);
 
-            // Update transaction dengan payment token
-            $transaction->update([
-                'payment_token' => $snapToken,
-            ]);
+            // Update token
+            $transaction->update(['payment_token' => $snapToken]);
+
+            // ✅ Baru hapus cart SETELAH token berhasil didapat
+            Cart::where('user_id', Auth::id())->delete();
+
+            // ✅ Baru kurangi stok SETELAH token berhasil didapat
+            foreach ($carts as $cart) {
+                $cart->product->decrement('stock', $cart->quantity);
+            }
 
             DB::commit();
 
             return response()->json([
-                'success' => true,
+                'success'    => true,
                 'snap_token' => $snapToken,
-                'order_id' => $orderId
+                'order_id'   => $orderId,
             ]);
 
         } catch (\Exception $e) {

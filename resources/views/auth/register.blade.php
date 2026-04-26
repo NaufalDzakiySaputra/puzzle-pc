@@ -1,96 +1,92 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Register - Puzzle PC</title>
-    
-    <!-- Tailwind CSS & Font Awesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-gradient-to-r from-blue-600 to-indigo-700">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
-                <i class="fas fa-user-plus text-white text-5xl mb-3"></i>
-                <h2 class="text-3xl font-bold text-white">Daftar Akun</h2>
-                <p class="text-blue-100 mt-2">Bergabung dengan Puzzle PC</p>
-            </div>
+@extends('layouts.app')
 
-            <!-- Form Register -->
-            <div class="px-6 py-8">
+@section('content')
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="product-card p-4 p-lg-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-plus display-1" style="background: var(--accent-gradient); background-clip: text; -webkit-background-clip: text; color: transparent;"></i>
+                    </div>
+                    <h2 class="fw-bold" style="background: var(--accent-gradient); background-clip: text; -webkit-background-clip: text; color: transparent;">
+                        JOIN THE GRID
+                    </h2>
+                    <p class="text-secondary">Daftar dan mulai berbelanja part PC</p>
+                </div>
+
+                <!-- Form Register -->
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
 
                     <!-- Name -->
-                    <div class="mb-4">
-                        <label for="name" class="block text-gray-700 font-bold mb-2">
-                            <i class="fas fa-user mr-2"></i> Nama Lengkap
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold">
+                            <i class="fas fa-user me-2"></i>Full Name
                         </label>
                         <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 @error('name') border-red-500 @enderror"
-                               placeholder="Masukkan nama lengkap">
+                               class="form-control @error('name') is-invalid @enderror"
+                               placeholder="Gamer Name">
                         @error('name')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Email Address -->
-                    <div class="mb-4">
-                        <label for="email" class="block text-gray-700 font-bold mb-2">
-                            <i class="fas fa-envelope mr-2"></i> Alamat Email
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">
+                            <i class="fas fa-envelope me-2"></i>Email Address
                         </label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 @error('email') border-red-500 @enderror"
-                               placeholder="contoh@email.com">
+                               class="form-control @error('email') is-invalid @enderror"
+                               placeholder="gamer@puzzlepc.com">
                         @error('email')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Password -->
-                    <div class="mb-4">
-                        <label for="password" class="block text-gray-700 font-bold mb-2">
-                            <i class="fas fa-lock mr-2"></i> Password
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">
+                            <i class="fas fa-lock me-2"></i>Password
                         </label>
                         <input id="password" type="password" name="password" required
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 @error('password') border-red-500 @enderror"
+                               class="form-control @error('password') is-invalid @enderror"
                                placeholder="Minimal 8 karakter">
+                        <small class="text-secondary">Password minimal 8 karakter</small>
                         @error('password')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Confirm Password -->
-                    <div class="mb-6">
-                        <label for="password_confirmation" class="block text-gray-700 font-bold mb-2">
-                            <i class="fas fa-check-circle mr-2"></i> Konfirmasi Password
+                    <div class="mb-4">
+                        <label for="password_confirmation" class="form-label fw-semibold">
+                            <i class="fas fa-check-circle me-2"></i>Confirm Password
                         </label>
                         <input id="password_confirmation" type="password" name="password_confirmation" required
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                               class="form-control"
                                placeholder="Ulangi password">
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-indigo-800 transition">
-                        <i class="fas fa-user-plus mr-2"></i> Daftar
+                    <button type="submit" class="btn btn-neon w-100 py-2">
+                        <i class="fas fa-user-plus me-2"></i>REGISTER
                     </button>
                 </form>
 
                 <!-- Link Login -->
-                <div class="text-center mt-6">
-                    <p class="text-gray-600">
-                        Sudah punya akun?
-                        <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-800 font-semibold">
-                            Login Sekarang
+                <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--border-color) !important;">
+                    <p class="text-secondary mb-0">
+                        Already have an account?
+                        <a href="{{ route('login') }}" class="fw-semibold text-decoration-none" style="color: var(--neon-cyan);">
+                            Login Now <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </p>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+@endsection

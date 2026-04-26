@@ -1,75 +1,85 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="py-12">
-    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-bold mb-6">📋 Checkout</h1>
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold" style="background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;">
+                💳 CHECKOUT
+            </h1>
+            <p class="text-secondary">Complete your payment to finalize order</p>
+        </div>
+    </div>
 
-        @if(session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {{ session('error') }}
-            </div>
-        @endif
+    @if(session('error'))
+        <div class="alert alert-danger mb-4">{{ session('error') }}</div>
+    @endif
 
-        <div class="grid md:grid-cols-2 gap-6">
-            <!-- Form Informasi Pengiriman -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="font-bold text-lg mb-4">Informasi Pengiriman</h2>
+    <div class="row g-4">
+        <!-- Shipping Information -->
+        <div class="col-md-6">
+            <div class="product-card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-truck me-2" style="color: var(--neon-cyan);"></i>
+                    SHIPPING INFORMATION
+                </h5>
                 
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2">Nama Lengkap</label>
-                    <input type="text" value="{{ Auth::user()->name }}" 
-                           class="w-full border rounded-lg px-3 py-2 bg-gray-100" readonly>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Full Name</label>
+                    <input type="text" value="{{ Auth::user()->name }}" class="form-control" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" value="{{ Auth::user()->email }}" class="form-control" readonly>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2">Email</label>
-                    <input type="email" value="{{ Auth::user()->email }}" 
-                           class="w-full border rounded-lg px-3 py-2 bg-gray-100" readonly>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2">Alamat Lengkap</label>
-                    <textarea id="shipping_address" rows="4" required
-                              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500"
-                              placeholder="Jl. Contoh No. 123, Kota, Kode Pos">{{ old('shipping_address') }}</textarea>
+                    <label class="form-label fw-bold">Shipping Address <span class="text-danger">*</span></label>
+                    <textarea id="shipping_address" rows="4" class="form-control" placeholder="Jl. Contoh No. 123, Kota, Kode Pos">{{ old('shipping_address') }}</textarea>
+                    <small class="text-secondary">Please complete your address for delivery</small>
                 </div>
                 
-                <button 
-                    type="button" 
-                    id="pay-button" 
-                    class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition"
-                >
-                    Proses Pesanan
+                <button type="button" id="pay-button" class="btn btn-neon w-100 py-3">
+                    <i class="fas fa-bolt me-2"></i>PROCEED TO PAYMENT
                 </button>
-            </div>
-            
-            <!-- Ringkasan Pesanan -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="font-bold text-lg mb-4">Ringkasan Pesanan</h2>
-                
-                @foreach($carts as $cart)
-                <div class="flex justify-between mb-3 pb-3 border-b">
-                    <div>
-                        <p class="font-bold">{{ $cart->product->name }}</p>
-                        <p class="text-sm text-gray-500">{{ $cart->quantity }} x Rp {{ number_format($cart->product->price, 0, ',', '.') }}</p>
-                    </div>
-                    <p class="font-bold">Rp {{ number_format($cart->product->price * $cart->quantity, 0, ',', '.') }}</p>
-                </div>
-                @endforeach
-                
-                <div class="flex justify-between mt-4 pt-4 border-t-2">
-                    <span class="text-xl font-bold">Total</span>
-                    <span class="text-2xl font-bold text-blue-600">
-                        Rp {{ number_format($total, 0, ',', '.') }}
-                    </span>
-                </div>
             </div>
         </div>
         
-        <div class="mt-4">
-            <a href="{{ route('cart.index') }}" class="text-blue-600 hover:text-blue-800">
-                ← Kembali ke Keranjang
+        <!-- Order Summary -->
+        <div class="col-md-6">
+            <div class="product-card p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-receipt me-2" style="color: var(--neon-cyan);"></i>
+                    ORDER SUMMARY
+                </h5>
+                
+                <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                    @foreach($carts as $cart)
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--border-color);">
+                        <div>
+                            <h6 class="fw-bold mb-0">{{ $cart->product->name }}</h6>
+                            <small class="text-secondary">{{ $cart->quantity }} x Rp {{ number_format($cart->product->price, 0, ',', '.') }}</small>
+                        </div>
+                        <span class="fw-bold">Rp {{ number_format($cart->product->price * $cart->quantity, 0, ',', '.') }}</span>
+                    </div>
+                    @endforeach
+                </div>
+                
+                <hr style="border-color: var(--border-color);">
+                
+                <div class="d-flex justify-content-between mt-3 pt-2">
+                    <span class="fs-5 fw-bold">TOTAL</span>
+                    <span class="price-tag fs-2 fw-bold">Rp {{ number_format($total, 0, ',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{{ route('cart.index') }}" class="text-decoration-none" style="color: var(--neon-cyan);">
+                <i class="fas fa-arrow-left me-1"></i> Back to Cart
             </a>
         </div>
     </div>
@@ -85,20 +95,21 @@
         const shippingAddress = document.getElementById('shipping_address').value;
         
         if (!shippingAddress.trim()) {
-            alert('Harap isi alamat lengkap terlebih dahulu!');
+            alert('⚠️ Harap isi alamat lengkap terlebih dahulu!');
             return;
         }
         
-        // Disable button dan tampilkan loading
+        // Disable button
         payButton.disabled = true;
-        payButton.innerText = 'Memproses...';
+        payButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>PROCESSING...';
         
-        // Kirim request ke server
-        fetch('https://achiness-justifier-hypnotize.ngrok-free.dev/checkout/process', {
+        // Kirim request ke server - PAKAI RELATIVE PATH
+        fetch('/checkout/process', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 shipping_address: shippingAddress
@@ -106,36 +117,41 @@
         })
         .then(response => response.json())
         .then(data => {
-            payButton.disabled = false;
-            payButton.innerText = 'Proses Pesanan';
+            console.log('Response:', data);
             
             if (data.success) {
-                // 🎯 Munculkan popup Midtrans
+                // Munculkan popup Midtrans
                 window.snap.pay(data.snap_token, {
                     onSuccess: function(result) {
+                        console.log('Success:', result);
                         window.location.href = '{{ route("orders.index") }}?payment=success';
                     },
                     onPending: function(result) {
+                        console.log('Pending:', result);
                         window.location.href = '{{ route("orders.index") }}?payment=pending';
                     },
                     onError: function(result) {
-                        alert('Pembayaran gagal! Silakan coba lagi.');
+                        console.log('Error:', result);
+                        alert('❌ Pembayaran gagal! Silakan coba lagi.');
                         window.location.href = '{{ route("orders.index") }}';
                     },
                     onClose: function() {
-                        alert('Popup pembayaran ditutup. Pesanan tetap tersimpan.');
+                        console.log('Closed');
+                        alert('⚠️ Popup pembayaran ditutup. Pesanan tetap tersimpan.');
                         window.location.href = '{{ route("orders.index") }}';
                     }
                 });
             } else {
-                alert('Error: ' + data.message);
+                alert('❌ Error: ' + data.message);
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="fas fa-bolt me-2"></i>PROCEED TO PAYMENT';
             }
         })
         .catch(error => {
+            console.error('Fetch Error:', error);
+            alert('❌ Terjadi kesalahan: ' + error.message);
             payButton.disabled = false;
-            payButton.innerText = 'Proses Pesanan';
-            console.error('Error:', error);
-            alert('Terjadi kesalahan pada server. Silakan coba lagi.');
+            payButton.innerHTML = '<i class="fas fa-bolt me-2"></i>PROCEED TO PAYMENT';
         });
     };
 </script>

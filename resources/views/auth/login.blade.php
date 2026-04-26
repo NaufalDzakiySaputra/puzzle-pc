@@ -1,93 +1,90 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - Puzzle PC</title>
-    
-    <!-- Tailwind CSS & Font Awesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body class="bg-gradient-to-r from-blue-600 to-indigo-700">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
-                <i class="fas fa-microchip text-white text-5xl mb-3"></i>
-                <h2 class="text-3xl font-bold text-white">Puzzle PC</h2>
-                <p class="text-blue-100 mt-2">Login untuk berbelanja</p>
-            </div>
+@extends('layouts.app')
 
-            <!-- Form Login -->
-            <div class="px-6 py-8">
+@section('content')
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="product-card p-4 p-lg-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-microchip display-1" style="background: var(--accent-gradient); background-clip: text; -webkit-background-clip: text; color: transparent;"></i>
+                    </div>
+                    <h2 class="fw-bold" style="background: var(--accent-gradient); background-clip: text; -webkit-background-clip: text; color: transparent;">
+                        WELCOME BACK
+                    </h2>
+                    <p class="text-secondary">Login untuk akses toko gaming Anda</p>
+                </div>
+
                 <!-- Session Status -->
                 @if (session('status'))
-                    <div class="mb-4 text-sm text-green-600">
+                    <div class="alert alert-success mb-4">
                         {{ session('status') }}
                     </div>
                 @endif
 
+                <!-- Form Login -->
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
 
                     <!-- Email Address -->
                     <div class="mb-4">
-                        <label for="email" class="block text-gray-700 font-bold mb-2">
-                            <i class="fas fa-envelope mr-2"></i> Alamat Email
+                        <label for="email" class="form-label fw-semibold">
+                            <i class="fas fa-envelope me-2"></i>Email Address
                         </label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 @error('email') border-red-500 @enderror"
-                               placeholder="contoh@email.com">
+                               class="form-control @error('email') is-invalid @enderror"
+                               placeholder="gamer@puzzlepc.com">
                         @error('email')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Password -->
                     <div class="mb-4">
-                        <label for="password" class="block text-gray-700 font-bold mb-2">
-                            <i class="fas fa-lock mr-2"></i> Password
+                        <label for="password" class="form-label fw-semibold">
+                            <i class="fas fa-lock me-2"></i>Password
                         </label>
                         <input id="password" type="password" name="password" required
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 @error('password') border-red-500 @enderror"
-                               placeholder="Masukkan password">
+                               class="form-control @error('password') is-invalid @enderror"
+                               placeholder="••••••••">
                         @error('password')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Remember Me -->
-                    <div class="flex items-center justify-between mb-6">
-                        <label class="flex items-center">
-                            <input type="checkbox" name="remember" class="rounded border-gray-300 text-blue-600">
-                            <span class="ml-2 text-sm text-gray-600">Ingat Saya</span>
-                        </label>
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="remember" class="form-check-input" id="remember">
+                            <label class="form-check-label text-secondary" for="remember">
+                                Remember Me
+                            </label>
+                        </div>
                         @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:text-blue-800">
-                                Lupa Password?
+                            <a href="{{ route('password.request') }}" class="text-decoration-none" style="color: var(--neon-cyan);">
+                                <i class="fas fa-key me-1"></i>Forgot Password?
                             </a>
                         @endif
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-indigo-800 transition">
-                        <i class="fas fa-sign-in-alt mr-2"></i> Login
+                    <button type="submit" class="btn btn-neon w-100 py-2">
+                        <i class="fas fa-sign-in-alt me-2"></i>LOGIN
                     </button>
                 </form>
 
                 <!-- Link Register -->
-                <div class="text-center mt-6">
-                    <p class="text-gray-600">
-                        Belum punya akun?
-                        <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-semibold">
-                            Daftar Sekarang
+                <div class="text-center mt-4 pt-3 border-top" style="border-color: var(--border-color) !important;">
+                    <p class="text-secondary mb-0">
+                        Don't have an account?
+                        <a href="{{ route('register') }}" class="fw-semibold text-decoration-none" style="color: var(--neon-cyan);">
+                            Register Now <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </p>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+@endsection

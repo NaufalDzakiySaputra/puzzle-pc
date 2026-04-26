@@ -12,7 +12,6 @@ class OrderController extends Controller
 {
     public function index()
     {
-        
         $transactions = Transaction::where('user_id', Auth::id())
             ->with('items')
             ->latest()
@@ -23,7 +22,6 @@ class OrderController extends Controller
 
     public function show(Transaction $transaction)
     {
-        
         if ($transaction->user_id !== Auth::id()) {
             abort(403);
         }
@@ -33,52 +31,67 @@ class OrderController extends Controller
         return view('customer.orders.show', compact('transaction'));
     }
 
-    /**
-     
-     */
     public function cekStatus($order_id)
     {
-        // Cari transaksi di database
-        $transaction = Transaction::where('order_id', $order_id)->first();
-        
+        // ✅ Cari transaksi + pastikan milik user yang login
+        $transaction = Transaction::where('order_id', $order_id)
+            ->where('user_id', Auth::id()) // ← Security fix
+            ->first();
+
         if (!$transaction) {
             return redirect()->back()->with('error', 'Transaksi tidak ditemukan.');
         }
 
-        // Ambil Server Key dari config
+        // ✅ Pakai config() — aman karena sudah ada config/midtrans.php
         $serverKey = config('midtrans.server_key');
+        $baseUrl   = config('midtrans.base_url');
         $authString = base64_encode($serverKey . ':');
-        
-        // Panggil API Midtrans untuk cek status
+
         $response = Http::withHeaders([
             'Authorization' => 'Basic ' . $authString,
-            'Accept' => 'application/json',
-        ])->get("https://api.sandbox.midtrans.com/v2/{$order_id}/status");
-        
-        if ($response->successful()) {
-            $data = $response->json();
-            
-            
-            if (in_array($data['transaction_status'], ['capture', 'settlement'])) {
-                $transaction->update([
-                    'status' => 'paid',
-                    'payment_type' => $data['payment_type'] ?? 'unknown',
-                    'midtrans_response' => json_encode($data)
-                ]);
-                
-                return redirect()->route('orders.index')
-                    ->with('success', '✅ Pembayaran berhasil dikonfirmasi!');
-                    
-            } elseif ($data['transaction_status'] == 'pending') {
-                return redirect()->back()
-                    ->with('info', '⏳ Pembayaran masih pending. Silakan selesaikan pembayaran Anda.');
-            } else {
-                return redirect()->back()
-                    ->with('error', 'Status pembayaran: ' . $data['transaction_status']);
-            }
+            'Accept'        => 'application/json',
+        ])->get("{$baseUrl}/{$order_id}/status");
+
+        if (!$response->successful()) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghubungi server pembayaran. Silakan coba lagi.');
         }
-        
-        return redirect()->back()
-            ->with('error', 'Gagal menghubungi server pembayaran. Silakan coba lagi.');
+
+        $data              = $response->json();
+        $transactionStatus = $data['transaction_status'] ?? null;
+        $fraudStatus       = $data['fraud_status'] ?? null;
+
+        // ✅ Mapping status dengan fraud_status check
+        if ($transactionStatus === 'capture') {
+            $status = $fraudStatus === 'accept' ? 'paid' : 'challenge';
+        } elseif ($transactionStatus === 'settlement') {
+            $status = 'paid';
+        } elseif ($transactionStatus === 'pending') {
+            $status = 'pending';
+        } elseif (in_array($transactionStatus, ['deny', 'cancel'])) {
+            $status = 'failed';
+        } elseif ($transactionStatus === 'expire') {
+            $status = 'expired';
+        } else {
+            $status = $transaction->status; // Tidak diubah kalau tidak dikenal
+        }
+
+        $transaction->update([
+            'status'            => $status,
+            'payment_type'      => $data['payment_type'] ?? $transaction->payment_type,
+            'midtrans_response' => json_encode($data),
+        ]);
+
+        // ✅ Response berdasarkan status
+        return match ($status) {
+            'paid'      => redirect()->route('orders.index')
+                            ->with('success', '✅ Pembayaran berhasil dikonfirmasi!'),
+            'pending'   => redirect()->back()
+                            ->with('info', '⏳ Pembayaran masih pending. Silakan selesaikan pembayaran.'),
+            'challenge' => redirect()->back()
+                            ->with('warning', '⚠️ Pembayaran sedang direview. Mohon tunggu konfirmasi.'),
+            default     => redirect()->back()
+                            ->with('error', 'Status pembayaran: ' . $transactionStatus),
+        };
     }
 }
